@@ -4,7 +4,7 @@
 
 // ⚠️ DÁN URL WEB APP TỪ APPS SCRIPT VÀO ĐÂY sau khi deploy Code.gs.
 // Vd: "https://script.google.com/macros/s/AKfyc..../exec"
-const APPS_SCRIPT_URL = "DÁN_WEB_APP_URL_VÀO_ĐÂY";
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz6h_t9bo1hAJ_bwdnnR2KbuMS-HtlArxH_Nh5G5XIf-OSARpwAxyoJE76Wb3yjiAsx/exec";
 
 // Số trạng thái của thành viên (khớp với Code.gs)
 const STATUS = { UNPAID: "unpaid", REPORTED: "reported", CONFIRMED: "confirmed" };
