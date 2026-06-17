@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Thu Tiền Nhóm</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>tailwind.config = { darkMode: 'class' }</script>
+</head>
+<body class="bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 min-h-screen">
+  <div class="max-w-2xl mx-auto px-4 py-6">
+
+    <!-- Header -->
+    <header class="flex items-center justify-between mb-6">
+      <h1 class="text-2xl font-bold flex items-center gap-2">💰 Thu Tiền Nhóm</h1>
+      <div class="flex items-center gap-2">
+        <button id="btnSettings" class="px-3 py-2 rounded-lg bg-slate-200 dark:bg-slate-800 hover:opacity-80 text-sm">⚙️ Cài đặt</button>
+        <button id="btnTheme" class="px-3 py-2 rounded-lg bg-slate-200 dark:bg-slate-800 hover:opacity-80 text-sm">🌙</button>
+      </div>
+    </header>
+
+    <!-- ====== FORM TẠO PHIÊN ====== -->
+    <section class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 p-5 mb-6">
+      <h2 class="font-semibold text-lg mb-4">Tạo phiên mới</h2>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div class="sm:col-span-2">
+          <label class="block text-sm font-medium mb-1">Tên sự kiện *</label>
+          <input id="eventName" type="text" placeholder="Nhậu cuối tháng" class="inp" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">Ngày</label>
+          <input id="eventDate" type="date" class="inp" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">Tổng bill (đ) *</label>
+          <input id="totalBill" type="number" inputmode="numeric" placeholder="1500000" class="inp" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">Phụ thu / giảm giá (đ)</label>
+          <input id="adjustment" type="number" inputmode="numeric" placeholder="0 (âm = giảm)" class="inp" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">Ghi chú điều chỉnh</label>
+          <input id="adjustmentNote" type="text" placeholder="VD: +10% phí phục vụ" class="inp" />
+        </div>
+      </div>
+
+      <!-- Thông tin nhận tiền -->
+      <h3 class="font-medium mt-5 mb-2 text-sm text-slate-500 dark:text-slate-400">Thông tin nhận tiền</h3>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div>
+          <label class="block text-sm font-medium mb-1">Tên người thu *</label>
+          <input id="collectorName" type="text" placeholder="Nguyễn Văn A" class="inp" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">Số tài khoản *</label>
+          <input id="bankAccount" type="text" inputmode="numeric" placeholder="0123456789" class="inp" />
+        </div>
+        <div class="sm:col-span-2">
+          <label class="block text-sm font-medium mb-1">Ngân hàng *</label>
+          <select id="bankCode" class="inp"></select>
+        </div>
+      </div>
+
+      <!-- Danh sách thành viên -->
+      <h3 class="font-medium mt-5 mb-2 text-sm text-slate-500 dark:text-slate-400">Thành viên</h3>
+      <div id="memberList" class="space-y-2"></div>
+      <button id="btnAddMember" class="mt-2 text-sm text-indigo-600 dark:text-indigo-400 font-medium hover:underline">+ Thêm thành viên</button>
+
+      <!-- Preview chia tiền -->
+      <div id="splitPreview" class="mt-4 text-sm bg-slate-100 dark:bg-slate-800 rounded-lg px-4 py-3 hidden"></div>
+
+      <button id="btnCreate" class="mt-5 w-full py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold disabled:opacity-50">
+        Tạo phiên & sinh link
+      </button>
+    </section>
+
+    <!-- ====== LỊCH SỬ PHIÊN ====== -->
+    <section>
+      <h2 class="font-semibold text-lg mb-3">Phiên đã tạo</h2>
+      <div id="historyList" class="space-y-2"></div>
+    </section>
+  </div>
+
+  <!-- ====== MODAL: KẾT QUẢ TẠO PHIÊN ====== -->
+  <div id="resultModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center p-4 z-50">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl p-5 max-w-md w-full">
+      <h3 class="font-bold text-lg mb-3">✅ Đã tạo phiên!</h3>
+      <p class="text-sm text-slate-500 dark:text-slate-400 mb-1">Link gửi cho thành viên (post lên group):</p>
+      <div class="flex gap-2 mb-3">
+        <input id="shareLink" readonly class="inp text-xs" />
+        <button id="btnCopyShare" class="px-3 rounded-lg bg-indigo-600 text-white text-sm shrink-0">Copy</button>
+      </div>
+      <p class="text-sm text-slate-500 dark:text-slate-400 mb-1">Link quản lý (giữ riêng cho bạn):</p>
+      <div class="flex gap-2 mb-4">
+        <input id="manageLink" readonly class="inp text-xs" />
+        <button id="btnCopyManage" class="px-3 rounded-lg bg-slate-600 text-white text-sm shrink-0">Copy</button>
+      </div>
+      <div class="flex gap-2">
+        <a id="goManage" class="flex-1 text-center py-2.5 rounded-xl bg-indigo-600 text-white font-semibold">Mở dashboard</a>
+        <button id="btnCloseModal" class="px-4 py-2.5 rounded-xl bg-slate-200 dark:bg-slate-800">Đóng</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====== MODAL: CÀI ĐẶT ====== -->
+  <div id="settingsModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center p-4 z-50">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl p-5 max-w-md w-full max-h-[90vh] overflow-y-auto">
+      <h3 class="font-bold text-lg mb-3">⚙️ Cài đặt mặc định</h3>
+      <p class="text-xs text-slate-500 mb-3">Lưu trên máy này, tự điền cho lần tạo phiên sau.</p>
+      <div class="space-y-3">
+        <div><label class="block text-sm font-medium mb-1">Tên người thu</label><input id="setCollector" class="inp" /></div>
+        <div><label class="block text-sm font-medium mb-1">Số tài khoản</label><input id="setAccount" class="inp" /></div>
+        <div><label class="block text-sm font-medium mb-1">Ngân hàng</label><select id="setBank" class="inp"></select></div>
+        <div><label class="block text-sm font-medium mb-1">Prefix nội dung CK</label><input id="setPrefix" placeholder="VD: NHAU" class="inp" /></div>
+        <div><label class="block text-sm font-medium mb-1">Mẫu text nhắc nợ</label>
+          <textarea id="setTemplate" rows="4" class="inp text-xs"></textarea>
+          <p class="text-[11px] text-slate-400 mt-1">Biến: {su_kien} {so_nguoi} {danh_sach} {stk}</p>
+        </div>
+      </div>
+      <div class="flex gap-2 mt-4">
+        <button id="btnSaveSettings" class="flex-1 py-2.5 rounded-xl bg-indigo-600 text-white font-semibold">Lưu</button>
+        <button id="btnCloseSettings" class="px-4 py-2.5 rounded-xl bg-slate-200 dark:bg-slate-800">Đóng</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast" class="fixed bottom-5 left-1/2 -translate-x-1/2 bg-slate-900 dark:bg-slate-700 text-white px-4 py-2 rounded-lg text-sm opacity-0 transition-opacity pointer-events-none z-50"></div>
+
+  <style>
+    .inp { width:100%; padding:0.6rem 0.75rem; border-radius:0.6rem; border:1px solid rgb(203 213 225);
+           background:white; color:inherit; font-size:0.9rem; outline:none; }
+    .inp:focus { border-color:rgb(99 102 241); box-shadow:0 0 0 3px rgb(99 102 241 / 0.15); }
+    .dark .inp { background:rgb(15 23 42); border-color:rgb(51 65 85); }
+  </style>
+
+  <script src="js/config.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/index.js"></script>
+</body>
+</html>
