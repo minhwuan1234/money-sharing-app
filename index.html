@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="vi" class="h-full dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Thu Tiền Nhóm</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>tailwind.config = { darkMode: 'class', theme: { extend: { fontFamily: { sans: ['Inter', 'sans-serif'] } } } }</script>
+  <style>
+    :root {
+      --bg: #09090e;
+      --surface: #111218;
+      --surface-2: #16171f;
+      --border: rgba(255,255,255,0.07);
+      --border-hover: rgba(255,255,255,0.13);
+      --text: #f1f5f9;
+      --muted: #64748b;
+      --label: #4b5563;
+    }
+    * { box-sizing: border-box; }
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; }
+    .section-label { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+    .inp {
+      width: 100%; padding: .6rem .875rem;
+      border-radius: .5rem; border: 1.5px solid var(--border);
+      background: var(--surface-2); color: var(--text); font-size: .875rem;
+      outline: none; font-family: inherit; transition: border-color .15s, box-shadow .15s;
+    }
+    .inp::placeholder { color: var(--muted); }
+    .inp:focus { border-color: rgba(99,102,241,0.5); box-shadow: 0 0 0 3px rgba(99,102,241,0.1); }
+    select.inp { cursor: pointer; }
+    .btn-primary {
+      width: 100%; padding: .75rem 1.5rem; border-radius: 10px;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      color: white; font-weight: 700; font-size: .9rem; border: none;
+      cursor: pointer; transition: opacity .15s, transform .1s; font-family: inherit;
+    }
+    .btn-primary:hover { opacity: .9; transform: translateY(-1px); }
+    .btn-primary:active { transform: translateY(0); }
+    .btn-primary:disabled { opacity: .4; cursor: not-allowed; transform: none; }
+    .btn-ghost { background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: var(--muted); font-size: .8rem; font-weight: 600; padding: 6px 12px; border-radius: 8px; cursor: pointer; font-family: inherit; transition: background .15s, color .15s; }
+    .btn-ghost:hover { background: rgba(255,255,255,0.09); color: var(--text); }
+    .member-add-btn { background: rgba(99,102,241,0.08); border: 1px solid rgba(99,102,241,0.2); color: #a5b4fc; font-size: .8rem; font-weight: 600; padding: 5px 12px; border-radius: 7px; cursor: pointer; font-family: inherit; transition: background .15s; display: flex; align-items: center; gap: 4px; }
+    .member-add-btn:hover { background: rgba(99,102,241,0.15); }
+    .member-del { background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.15); color: #f87171; font-size: .8rem; font-weight: 600; padding: 5px 10px; border-radius: 7px; cursor: pointer; flex-shrink: 0; font-family: inherit; transition: background .15s; }
+    .member-del:hover { background: rgba(239,68,68,0.15); }
+    .divider { height: 1px; background: var(--border); margin: 20px 0; }
+    .preview-box { background: rgba(99,102,241,0.07); border: 1px solid rgba(99,102,241,0.2); border-radius: 10px; padding: 12px 16px; font-size: .875rem; color: #a5b4fc; }
+    /* Modal */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(6px); display: flex; align-items: center; justify-content: center; padding: 16px; z-index: 50; }
+    .modal-box { background: var(--surface); border: 1px solid var(--border-hover); border-radius: 16px; padding: 24px; max-width: 380px; width: 100%; }
+    /* Toast */
+    #toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: #1e293b; border: 1px solid rgba(255,255,255,0.12); color: var(--text); padding: 10px 18px; border-radius: 12px; font-size: .875rem; font-weight: 500; opacity: 0; transition: opacity .25s; pointer-events: none; z-index: 99; white-space: nowrap; }
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 4px; } ::-webkit-scrollbar-track { background: transparent; } ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 99px; }
+  </style>
+</head>
+<body>
+
+  <!-- Nav -->
+  <nav style="position:sticky;top:0;z-index:40;background:rgba(9,9,14,0.85);backdrop-filter:blur(12px);border-bottom:1px solid var(--border)">
+    <div style="max-width:620px;margin:0 auto;padding:0 16px;height:52px;display:flex;align-items:center;justify-content:space-between">
+      <div style="display:flex;align-items:center;gap:8px">
+        <div style="width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,#6366f1,#8b5cf6);display:flex;align-items:center;justify-content:center;font-size:.875rem;font-weight:700;color:white">₫</div>
+        <span style="font-weight:800;font-size:.95rem;letter-spacing:-.01em">Thu Tiền Nhóm</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <button id="btnSettings" class="btn-ghost">
+          <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="display:inline;margin-right:4px"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3"/></svg>Cài đặt
+        </button>
+        <button id="btnTheme" style="width:32px;height:32px;border-radius:8px;background:transparent;border:none;cursor:pointer;font-size:1rem;color:var(--muted)">🌙</button>
+      </div>
+    </div>
+  </nav>
+
+  <div style="max-width:620px;margin:0 auto;padding:28px 16px 60px">
+
+    <!-- Hero -->
+    <div style="margin-bottom:28px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+        <div style="width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#6366f1,#8b5cf6);display:flex;align-items:center;justify-content:center;font-size:1.1rem">💰</div>
+        <div>
+          <h1 style="font-size:1.4rem;font-weight:900;letter-spacing:-.03em;line-height:1">Thu Tiền Nhóm</h1>
+          <p style="font-style:italic;font-size:.78rem;color:var(--muted)">"chia bill nhanh, không cần hỏi ai"</p>
+        </div>
+      </div>
+      <p style="font-size:.825rem;color:var(--muted);margin-left:46px">Tạo phiên → sinh link → thành viên tự báo. Không cần check thủ công.</p>
+    </div>
+
+    <!-- Form tạo phiên -->
+    <div class="card" style="padding:24px;margin-bottom:20px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:20px">
+        <div style="width:22px;height:22px;border-radius:6px;background:rgba(99,102,241,0.15);display:flex;align-items:center;justify-content:center">
+          <svg width="12" height="12" fill="none" stroke="#818cf8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+        </div>
+        <span style="font-weight:700;font-size:.95rem">Tạo phiên mới</span>
+      </div>
+
+      <!-- Thông tin sự kiện -->
+      <div class="section-label" style="margin-bottom:12px">Sự kiện</div>
+      <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px">
+        <div>
+          <label style="display:block;font-size:.75rem;font-weight:500;color:var(--muted);margin-bottom:6px">Tên sự kiện *</label>
+          <input id="eventName" type="text" placeholder="Nhậu cuối tháng, cà phê sinh nhật..." class="inp" />
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div>
+            <label style="display:block;font-size:.75rem;font-weight:500;color:var(--muted);margin-bottom:6px">Ngày</label>
+            <input id="eventDate" type="date" class="inp" />
+          </div>
+          <div>
+            <label style="display:block;font-size:.75rem;font-weight:500;color:var(--muted);margin-bottom:6px">Tổng bill (đ) *</label>
+            <input id="totalBill" type="number" inputmode="numeric" placeholder="1500000" class="inp" />
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div>
+            <label style="display:block;font-size:.75rem;font-weight:500;color:var(--muted);margin-bottom:6px">Phụ thu / giảm (đ)</label>
+            <input id="adjustment" type="number" inputmode="numeric" placeholder="0" class="inp" />
+          </div>
+          <div>
+            <label style="display:block;font-size:.75rem;font-weight:500;color:var(--muted);margin-bottom:6px">Ghi chú</label>
+            <input id="adjustmentNote" type="text" placeholder="+10% phí phục vụ" class="inp" />
+          </div>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Thông tin nhận tiền -->
+      <div class="section-label" style="margin-bottom:12px">Thông tin nhận tiền</div>
+      <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div>
+            <label style="display:block;font-size:.75rem;font-weight:500;color:var(--muted);margin-bottom:6px">Tên người thu *</label>
+            <input id="collectorName" type="text" placeholder="Nguyễn Văn A" class="inp" />
+          </div>
+          <div>
+            <label style="display:block;font-size:.75rem;font-weight:500;color:var(--muted);margin-bottom:6px">Số tài khoản *</label>
+            <input id="bankAccount" type="text" inputmode="numeric" placeholder="0123456789" class="inp" />
+          </div>
+        </div>
+        <div>
+          <label style="display:block;font-size:.75rem;font-weight:500;color:var(--muted);margin-bottom:6px">Ngân hàng *</label>
+          <select id="bankCode" class="inp"></select>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Thành viên -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <span class="section-label">Thành viên</span>
+        <button id="btnAddMember" class="member-add-btn">
+          <svg width="11" height="11" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+          Thêm
+        </button>
+      </div>
+      <div id="memberList" style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px"></div>
+
+      <!-- Preview -->
+      <div id="splitPreview" class="hidden preview-box" style="margin-bottom:16px"></div>
+
+      <button id="btnCreate" class="btn-primary">Tạo phiên & sinh link →</button>
+    </div>
+
+    <!-- Lịch sử -->
+    <div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <span style="font-weight:700;font-size:.95rem">Phiên đã tạo</span>
+      </div>
+      <div id="historyList"></div>
+    </div>
+  </div>
+
+  <!-- Modal: Kết quả -->
+  <div id="resultModal" class="modal-overlay hidden">
+    <div class="modal-box">
+      <div style="width:48px;height:48px;border-radius:14px;background:rgba(34,197,94,0.12);border:1px solid rgba(34,197,94,0.25);display:flex;align-items:center;justify-content:center;margin:0 auto 16px">
+        <svg width="22" height="22" fill="none" stroke="#4ade80" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+      </div>
+      <h3 style="font-weight:800;font-size:1.2rem;text-align:center;margin-bottom:4px">Đã tạo phiên!</h3>
+      <p style="color:var(--muted);font-size:.8rem;text-align:center;margin-bottom:20px">Post link này lên group cho mọi người tự tick</p>
+
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div>
+          <div class="section-label" style="margin-bottom:8px">Link gửi group 👇</div>
+          <div style="display:flex;gap:8px">
+            <input id="shareLink" readonly class="inp" style="flex:1;font-size:.78rem;font-family:monospace" />
+            <button id="btnCopyShare" style="flex-shrink:0;padding:0 16px;border-radius:8px;background:rgba(99,102,241,0.15);border:1px solid rgba(99,102,241,0.3);color:#a5b4fc;font-size:.8rem;font-weight:700;cursor:pointer;white-space:nowrap;font-family:inherit">Copy</button>
+          </div>
+        </div>
+        <div>
+          <div class="section-label" style="margin-bottom:8px">Link quản lý (giữ riêng)</div>
+          <div style="display:flex;gap:8px">
+            <input id="manageLink" readonly class="inp" style="flex:1;font-size:.78rem;font-family:monospace" />
+            <button id="btnCopyManage" class="btn-ghost" style="flex-shrink:0;white-space:nowrap">Copy</button>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:10px;margin-top:20px">
+        <a id="goManage" style="flex:1;text-align:center;padding:11px;border-radius:10px;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:white;font-weight:700;font-size:.875rem;text-decoration:none">Mở dashboard →</a>
+        <button id="btnCloseModal" class="btn-ghost" style="padding:11px 18px">Đóng</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Cài đặt -->
+  <div id="settingsModal" class="modal-overlay hidden">
+    <div class="modal-box" style="max-height:90vh;overflow-y:auto;max-width:420px">
+      <h3 style="font-weight:800;font-size:1rem;margin-bottom:4px">Cài đặt mặc định</h3>
+      <p style="font-size:.78rem;color:var(--muted);margin-bottom:20px">Tự điền cho lần tạo phiên sau trên máy này.</p>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div>
+          <label style="display:block;font-size:.75rem;font-weight:500;color:var(--muted);margin-bottom:6px">Tên người thu</label>
+          <input id="setCollector" class="inp" />
+        </div>
+        <div>
+          <label style="display:block;font-size:.75rem;font-weight:500;color:var(--muted);margin-bottom:6px">Số tài khoản</label>
+          <input id="setAccount" class="inp" />
+        </div>
+        <div>
+          <label style="display:block;font-size:.75rem;font-weight:500;color:var(--muted);margin-bottom:6px">Ngân hàng</label>
+          <select id="setBank" class="inp"></select>
+        </div>
+        <div>
+          <label style="display:block;font-size:.75rem;font-weight:500;color:var(--muted);margin-bottom:6px">Prefix nội dung CK</label>
+          <input id="setPrefix" placeholder="VD: NHAU" class="inp" />
+        </div>
+        <div>
+          <label style="display:block;font-size:.75rem;font-weight:500;color:var(--muted);margin-bottom:6px">Mẫu nhắc nợ</label>
+          <textarea id="setTemplate" rows="4" class="inp" style="resize:vertical;height:auto"></textarea>
+          <p style="font-size:.7rem;color:var(--muted);margin-top:4px">Biến: {su_kien} {so_nguoi} {danh_sach} {stk}</p>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:20px">
+        <button id="btnSaveSettings" class="btn-primary">Lưu cài đặt</button>
+        <button id="btnCloseSettings" class="btn-ghost" style="padding:0 18px">Đóng</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast"></div>
+
+  <script src="js/config.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/index.js"></script>
+  <script>
+    // Override renderHistory to use dark style
+    window.renderHistory = function() {
+      const list = getSavedSessions();
+      const el = document.getElementById("historyList");
+      if (list.length === 0) {
+        el.innerHTML = `<div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:24px;text-align:center;color:var(--muted);font-size:.875rem">Chưa có phiên nào được tạo trên máy này.</div>`;
+        return;
+      }
+      el.innerHTML = list.map(s => `
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px">
+          <div style="min-width:0;flex:1">
+            <p style="font-weight:600;font-size:.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(s.event_name || "(không tên)")}</p>
+            <p style="font-size:.75rem;color:var(--muted);margin-top:2px">${esc(s.date || "")}</p>
+          </div>
+          <div style="display:flex;gap:8px;flex-shrink:0">
+            <a href="${buildManageUrl(s.session_id, s.manage_token)}" style="padding:6px 14px;border-radius:8px;background:rgba(99,102,241,0.12);border:1px solid rgba(99,102,241,0.25);color:#a5b4fc;font-size:.8rem;font-weight:600;text-decoration:none;white-space:nowrap">Quản lý →</a>
+            <button data-id="${esc(s.session_id)}" class="del-hist btn-ghost" style="padding:6px 10px">🗑</button>
+          </div>
+        </div>`).join("");
+      el.querySelectorAll(".del-hist").forEach(b => {
+        b.onclick = () => {
+          if (confirm("Xóa phiên này khỏi lịch sử trên máy? (Dữ liệu trên Sheets vẫn còn)")) {
+            removeSessionRef(b.dataset.id); renderHistory();
+          }
+        };
+      });
+    };
+
+    // Override addMemberRow to use dark style
+    window.addMemberRow = function(name = "", phone = "") {
+      const row = document.createElement("div");
+      row.className = "member-row-item";
+      row.style.cssText = "display:flex;gap:8px;align-items:center";
+      row.innerHTML = `
+        <input class="inp m-name" placeholder="Tên thành viên *" value="${esc(name)}" style="flex:1" />
+        <input class="inp m-phone" placeholder="SĐT (tùy)" inputmode="numeric" value="${esc(phone)}" style="width:120px;flex-shrink:0" />
+        <button class="member-del m-del">✕</button>`;
+      row.querySelector(".m-del").onclick = () => { row.remove(); updatePreview(); };
+      row.querySelector(".m-name").oninput = updatePreview;
+      document.getElementById("memberList").appendChild(row);
+      updatePreview();
+    };
+
+    // Override openModal/closeModal
+    window.openModal  = id => { const m = document.getElementById(id); m.classList.remove("hidden"); };
+    window.closeModal = id => { const m = document.getElementById(id); m.classList.add("hidden"); };
+
+    applyTheme(lsGet(LS_KEYS.THEME, "dark"));
+    document.getElementById("btnTheme").textContent = (lsGet(LS_KEYS.THEME, "dark") === "dark") ? "☀️" : "🌙";
+    document.getElementById("btnTheme").onclick = () => {
+      const t = toggleTheme();
+      document.getElementById("btnTheme").textContent = t === "dark" ? "☀️" : "🌙";
+    };
+  </script>
+</body>
+</html>
