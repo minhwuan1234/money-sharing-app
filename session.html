@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="vi" class="h-full dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Chuyển tiền — Thu Tiền Nhóm</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>tailwind.config = { darkMode: 'class', theme: { extend: { fontFamily: { sans: ['Inter', 'sans-serif'] } } } }</script>
+  <style>
+    :root {
+      --bg: #09090e;
+      --surface: #111218;
+      --surface-2: #16171f;
+      --border: rgba(255,255,255,0.07);
+      --text: #f1f5f9;
+      --muted: #64748b;
+    }
+    * { box-sizing: border-box; }
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; }
+    .section-label { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+    .badge { display: inline-flex; align-items: center; gap: 5px; font-size: 0.7rem; font-weight: 600; padding: 2px 8px; border-radius: 99px; }
+    .badge-unpaid    { background: rgba(239,68,68,0.12);  color: #f87171; }
+    .badge-reported  { background: rgba(245,158,11,0.12); color: #fbbf24; }
+    .badge-confirmed { background: rgba(34,197,94,0.12);  color: #4ade80; }
+    .dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+    .dot-unpaid    { background: #ef4444; }
+    .dot-reported  { background: #f59e0b; }
+    .dot-confirmed { background: #22c55e; }
+    .btn-tick-unpaid {
+      background: rgba(99,102,241,0.12); border: 1px solid rgba(99,102,241,0.25);
+      color: #a5b4fc; font-weight: 600; font-size: 0.8rem; padding: 7px 14px; border-radius: 8px;
+      cursor: pointer; white-space: nowrap; transition: background .15s;
+    }
+    .btn-tick-unpaid:hover { background: rgba(99,102,241,0.22); }
+    .btn-tick-reported {
+      background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.2);
+      color: #fbbf24; font-weight: 600; font-size: 0.8rem; padding: 7px 14px; border-radius: 8px;
+      cursor: pointer; white-space: nowrap; transition: background .15s;
+    }
+    .btn-tick-reported:hover { background: rgba(245,158,11,0.18); }
+    .btn-tick-confirmed {
+      background: rgba(34,197,94,0.08); border: 1px solid rgba(34,197,94,0.15);
+      color: #4ade80; font-weight: 600; font-size: 0.8rem; padding: 7px 14px; border-radius: 8px;
+      cursor: not-allowed; opacity: .7;
+    }
+    .btn-copy { background: rgba(255,255,255,0.06); border: 1px solid var(--border); color: #94a3b8; font-size: 0.75rem; font-weight: 600; padding: 4px 10px; border-radius: 6px; cursor: pointer; transition: background .15s; }
+    .btn-copy:hover { background: rgba(255,255,255,0.1); }
+    .inp { width:100%; padding: .6rem .875rem; border-radius: .5rem; border: 1.5px solid var(--border); background: var(--surface-2); color: var(--text); font-size: .875rem; outline: none; font-family: inherit; transition: border-color .15s; }
+    .inp::placeholder { color: var(--muted); }
+    .inp:focus { border-color: rgba(99,102,241,0.5); box-shadow: 0 0 0 3px rgba(99,102,241,0.1); }
+    .member-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 16px; border-bottom: 1px solid var(--border); }
+    .member-row:last-child { border-bottom: none; }
+    #toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: #1e293b; border: 1px solid rgba(255,255,255,0.12); color: var(--text); padding: 10px 18px; border-radius: 12px; font-size: .875rem; font-weight: 500; opacity: 0; transition: opacity .25s; pointer-events: none; z-index: 99; white-space: nowrap; }
+    .info-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border); }
+    .info-row:last-child { border-bottom: none; }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <div style="background:linear-gradient(160deg,#1a1333 0%,#0f172a 50%,#09090e 100%);border-bottom:1px solid var(--border);padding:32px 16px 40px;text-align:center">
+    <div id="loading" style="color:var(--muted);font-size:.875rem">Đang tải thông tin phiên...</div>
+    <div id="headerContent" class="hidden">
+      <p id="eventDate" style="font-size:.75rem;color:#818cf8;font-weight:600;letter-spacing:.05em;margin-bottom:6px"></p>
+      <h1 id="eventTitle" style="font-size:1.5rem;font-weight:800;letter-spacing:-.02em;margin-bottom:16px"></h1>
+      <div style="display:inline-block;background:rgba(255,255,255,0.06);border:1px solid rgba(99,102,241,0.3);border-radius:16px;padding:16px 28px">
+        <div style="font-size:.72rem;color:#818cf8;font-weight:600;letter-spacing:.06em;text-transform:uppercase;margin-bottom:4px">Bạn cần chuyển</div>
+        <div id="amount" style="font-size:2.5rem;font-weight:900;letter-spacing:-.04em;color:#fff"></div>
+        <div id="adjNote" style="font-size:.72rem;color:var(--muted);margin-top:4px"></div>
+      </div>
+    </div>
+  </div>
+
+  <div style="max-width:480px;margin:0 auto;padding:0 16px 60px;margin-top:-20px">
+
+    <div id="content" class="hidden" style="display:flex;flex-direction:column;gap:14px">
+
+      <!-- QR + STK -->
+      <div class="card" style="padding:20px">
+        <div class="section-label" style="text-align:center;margin-bottom:16px">Quét QR hoặc chuyển tay</div>
+        <img id="qr" alt="QR chuyển khoản" style="display:block;margin:0 auto;width:180px;height:180px;object-fit:contain;background:#fff;border-radius:12px;padding:8px" />
+
+        <div style="margin-top:16px">
+          <div class="info-row">
+            <span style="font-size:.825rem;color:var(--muted)">Ngân hàng</span>
+            <span id="bankName" style="font-size:.825rem;font-weight:600"></span>
+          </div>
+          <div class="info-row">
+            <span style="font-size:.825rem;color:var(--muted)">Số tài khoản</span>
+            <div style="display:flex;align-items:center;gap:8px">
+              <span id="bankAccount" style="font-size:.875rem;font-weight:700;font-family:monospace"></span>
+              <button id="copyAcc" class="btn-copy">copy</button>
+            </div>
+          </div>
+          <div class="info-row">
+            <span style="font-size:.825rem;color:var(--muted)">Chủ tài khoản</span>
+            <span id="collector" style="font-size:.825rem;font-weight:600"></span>
+          </div>
+          <div class="info-row">
+            <span style="font-size:.825rem;color:var(--muted)">Nội dung CK</span>
+            <div style="display:flex;align-items:center;gap:8px">
+              <span id="transferContent" style="font-size:.8rem;font-weight:700;font-family:monospace;color:#818cf8"></span>
+              <button id="copyContent" class="btn-copy">copy</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tick tên -->
+      <div class="card" style="overflow:hidden">
+        <div style="padding:16px 20px;border-bottom:1px solid var(--border)">
+          <div style="font-weight:700;font-size:.95rem;margin-bottom:2px">Bạn là ai?</div>
+          <div style="font-size:.78rem;color:var(--muted)">Tìm tên → bấm <span style="color:#a5b4fc">"Tôi đã chuyển"</span> sau khi CK xong.</div>
+        </div>
+        <div style="padding:12px 16px;border-bottom:1px solid var(--border)">
+          <input id="search" class="inp" placeholder="Tìm tên hoặc số điện thoại..." />
+        </div>
+        <div id="memberList" style="max-height:340px;overflow-y:auto"></div>
+      </div>
+
+    </div>
+
+    <div id="error" class="hidden" style="text-align:center;padding:64px 0">
+      <div style="width:64px;height:64px;border-radius:16px;background:var(--surface);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:2rem">😕</div>
+      <p id="errorMsg" style="color:var(--muted);font-size:.875rem"></p>
+    </div>
+  </div>
+
+  <div id="toast"></div>
+
+  <script src="js/config.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/session.js"></script>
+  <script>
+    // Override renderSession and renderMembers to use new UI
+    const _origRenderSession = window.renderSession;
+    window.renderSession = function() {
+      document.getElementById("loading").classList.add("hidden");
+      document.getElementById("content").style.display = "flex";
+      document.getElementById("content").classList.remove("hidden");
+      document.getElementById("headerContent").classList.remove("hidden");
+
+      document.getElementById("eventTitle").textContent = SESSION.event_name || "Thu tiền nhóm";
+      document.getElementById("eventDate").textContent = SESSION.date || "";
+      document.getElementById("amount").textContent = formatMoney(SESSION.amount_per_person);
+      document.getElementById("adjNote").textContent = SESSION.adjustment_note ? "* " + SESSION.adjustment_note : "";
+      document.getElementById("bankName").textContent = SESSION.bank_name || "";
+      document.getElementById("bankAccount").textContent = SESSION.bank_account || "";
+      document.getElementById("collector").textContent = SESSION.collector_name || "";
+
+      const content = SESSION.event_name
+        ? removeDiacritics(SESSION.event_name).toUpperCase().replace(/[^A-Z0-9 ]/g, "").trim().slice(0, 20)
+        : "THANH TOAN";
+      document.getElementById("transferContent").textContent = content;
+
+      document.getElementById("qr").src = buildVietQrUrl({
+        bankCode: SESSION.bank_code,
+        accountNo: SESSION.bank_account,
+        amount: SESSION.amount_per_person,
+        content: content,
+        accountName: SESSION.collector_name,
+      });
+
+      document.getElementById("copyAcc").onclick     = async () => { await copyText(SESSION.bank_account); toast("Đã copy số TK."); };
+      document.getElementById("copyContent").onclick = async () => { await copyText(content); toast("Đã copy nội dung."); };
+      document.getElementById("search").oninput = (e) => renderMembers(e.target.value.trim().toLowerCase());
+      renderMembers("");
+    };
+
+    window.renderMembers = function(keyword) {
+      const list = document.getElementById("memberList");
+      const filtered = MEMBERS.filter(m =>
+        !keyword ||
+        removeDiacritics(m.name).toLowerCase().includes(removeDiacritics(keyword)) ||
+        String(m.phone || "").includes(keyword)
+      );
+      if (filtered.length === 0) {
+        list.innerHTML = `<div style="text-align:center;padding:24px;color:var(--muted);font-size:.875rem">Không tìm thấy tên này.</div>`;
+        return;
+      }
+      list.innerHTML = filtered.map(m => {
+        const locked   = m.status === STATUS.CONFIRMED;
+        const reported = m.status === STATUS.REPORTED || m.status === STATUS.CONFIRMED;
+        const bc = { unpaid: "badge-unpaid", reported: "badge-reported", confirmed: "badge-confirmed" }[m.status] || "badge-unpaid";
+        const dc = { unpaid: "dot-unpaid",   reported: "dot-reported",   confirmed: "dot-confirmed"   }[m.status] || "dot-unpaid";
+        const lbl = { unpaid: "Chưa trả", reported: "Đã báo", confirmed: "Đã nhận" }[m.status] || "Chưa trả";
+        const btnClass = locked ? "btn-tick-confirmed" : reported ? "btn-tick-reported" : "btn-tick-unpaid";
+        const btnLabel = locked ? "✓ Đã nhận" : reported ? "↩ Bỏ báo" : "Tôi đã chuyển";
+        return `<div class="member-row">
+          <div style="min-width:0;flex:1">
+            <div style="font-weight:600;font-size:.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(m.name)}</div>
+            <span class="badge ${bc}"><span class="dot ${dc}"></span>${lbl}</span>
+          </div>
+          <button data-id="${esc(m.member_id)}" data-reported="${reported}" class="btn-tick ${btnClass}" ${locked ? "disabled" : ""}>${btnLabel}</button>
+        </div>`;
+      }).join("");
+      list.querySelectorAll(".btn-tick").forEach(btn => {
+        btn.onclick = () => {
+          if (btn.disabled) return;
+          onTick(btn.dataset.id, btn.dataset.reported === "true");
+        };
+      });
+    };
+
+    window.showError = function(msg) {
+      document.getElementById("loading").classList.add("hidden");
+      document.getElementById("content").classList.add("hidden");
+      document.getElementById("error").classList.remove("hidden");
+      document.getElementById("errorMsg").textContent = msg;
+    };
+
+    applyTheme(lsGet(LS_KEYS.THEME, "dark"));
+  </script>
+</body>
+</html>
