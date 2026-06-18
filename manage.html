@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="vi" class="h-full dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard — Thu Tiền Nhóm</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>tailwind.config = { darkMode: 'class', theme: { extend: { fontFamily: { sans: ['Inter', 'sans-serif'] } } } }</script>
+  <style>
+    :root {
+      --bg: #09090e;
+      --surface: #111218;
+      --surface-2: #16171f;
+      --border: rgba(255,255,255,0.07);
+      --border-hover: rgba(255,255,255,0.13);
+      --text: #f1f5f9;
+      --muted: #64748b;
+      --label: #374151;
+    }
+    * { box-sizing: border-box; }
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+    }
+    .card-inner {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+    }
+    .stat-box {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 20px;
+      text-align: center;
+      min-width: 90px;
+    }
+    .stat-num { font-size: 1.75rem; font-weight: 800; line-height: 1; letter-spacing: -0.03em; }
+    .stat-lbl { font-size: 0.72rem; color: var(--muted); font-weight: 500; margin-top: 4px; }
+    .section-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .progress-track {
+      height: 6px;
+      border-radius: 99px;
+      background: rgba(255,255,255,0.07);
+      overflow: hidden;
+    }
+    .progress-fill-confirmed { height: 100%; border-radius: 99px; background: #22c55e; transition: width .6s ease; }
+    .progress-fill-reported  { height: 100%; border-radius: 99px; background: #f59e0b; transition: width .6s ease; }
+    .btn-confirm { background: rgba(34,197,94,0.12); border: 1px solid rgba(34,197,94,0.25); color: #4ade80; font-weight: 600; font-size: 0.8rem; padding: 6px 14px; border-radius: 8px; cursor: pointer; white-space: nowrap; transition: background .15s; }
+    .btn-confirm:hover { background: rgba(34,197,94,0.2); }
+    .btn-unconfirm { background: rgba(100,116,139,0.12); border: 1px solid rgba(100,116,139,0.2); color: #94a3b8; font-weight: 600; font-size: 0.8rem; padding: 6px 14px; border-radius: 8px; cursor: pointer; white-space: nowrap; transition: background .15s; }
+    .btn-unconfirm:hover { background: rgba(100,116,139,0.2); }
+    .btn-remind { background: rgba(99,102,241,0.12); border: 1px solid rgba(99,102,241,0.25); color: #a5b4fc; font-weight: 600; font-size: 0.875rem; padding: 10px 20px; border-radius: 10px; cursor: pointer; transition: background .15s; display: flex; align-items: center; gap: 8px; }
+    .btn-remind:hover { background: rgba(99,102,241,0.2); }
+    .btn-remind:disabled { opacity: 0.4; cursor: not-allowed; }
+    .badge { display: inline-flex; align-items: center; gap: 5px; font-size: 0.7rem; font-weight: 600; padding: 2px 8px; border-radius: 99px; }
+    .badge-unpaid    { background: rgba(239,68,68,0.12); color: #f87171; }
+    .badge-reported  { background: rgba(245,158,11,0.12); color: #fbbf24; }
+    .badge-confirmed { background: rgba(34,197,94,0.12); color: #4ade80; }
+    .dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+    .dot-unpaid    { background: #ef4444; }
+    .dot-reported  { background: #f59e0b; }
+    .dot-confirmed { background: #22c55e; }
+    #liveDot span { display: inline-block; }
+    .nav-link { display: flex; align-items: center; gap: 6px; font-size: 0.8rem; font-weight: 500; color: var(--muted); text-decoration: none; padding: 6px 10px; border-radius: 8px; transition: color .15s, background .15s; }
+    .nav-link:hover { color: var(--text); background: rgba(255,255,255,0.05); }
+    .member-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 14px; border-bottom: 1px solid var(--border); }
+    .member-row:last-child { border-bottom: none; }
+    #toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: #1e293b; border: 1px solid rgba(255,255,255,0.12); color: #f1f5f9; padding: 10px 18px; border-radius: 12px; font-size: 0.875rem; font-weight: 500; opacity: 0; transition: opacity .25s; pointer-events: none; z-index: 99; white-space: nowrap; }
+  </style>
+</head>
+<body>
+
+  <!-- Nav -->
+  <nav style="position:sticky;top:0;z-index:40;background:rgba(9,9,14,0.85);backdrop-filter:blur(12px);border-bottom:1px solid var(--border)">
+    <div style="max-width:680px;margin:0 auto;padding:0 16px;height:52px;display:flex;align-items:center;justify-content:space-between">
+      <a href="index.html" class="nav-link">
+        <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
+        Trang chủ
+      </a>
+      <div style="display:flex;align-items:center;gap:16px">
+        <div id="liveDot" style="display:flex;align-items:center;gap:6px;font-size:0.75rem;font-weight:600;color:#4ade80">
+          <span style="width:7px;height:7px;border-radius:50%;background:#22c55e;animation:pulse 2s infinite"></span>
+          live
+        </div>
+        <button id="btnTheme" style="width:32px;height:32px;border-radius:8px;background:transparent;border:none;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;color:var(--muted)" title="Đổi theme">🌙</button>
+      </div>
+    </div>
+  </nav>
+
+  <style>@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}</style>
+
+  <div id="loading" style="text-align:center;color:var(--muted);padding:80px 0;font-size:0.875rem">Đang tải...</div>
+
+  <div id="content" class="hidden" style="max-width:680px;margin:0 auto;padding:24px 16px 60px;display:flex;flex-direction:column;gap:16px">
+
+    <!-- Banner header (like screenshot) -->
+    <div class="card" style="padding:20px 24px;display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap">
+      <div style="min-width:0;flex:1">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+          <div style="width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,#6366f1,#8b5cf6);display:flex;align-items:center;justify-content:center;font-size:0.9rem;flex-shrink:0">💰</div>
+          <h1 id="eventTitle" style="font-size:1.1rem;font-weight:800;letter-spacing:-0.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></h1>
+        </div>
+        <p style="font-style:italic;font-size:0.78rem;color:var(--muted);margin-left:36px">"thu tiền nhóm"</p>
+        <p id="eventDate" style="font-size:0.75rem;color:var(--label);margin-left:36px;margin-top:2px"></p>
+      </div>
+      <div style="display:flex;gap:8px;flex-shrink:0">
+        <div class="stat-box">
+          <div id="confirmedCount" class="stat-num" style="color:#818cf8">—</div>
+          <div class="stat-lbl">đã xác nhận</div>
+        </div>
+        <div class="stat-box">
+          <div id="reportedCount" class="stat-num" style="color:#fbbf24">—</div>
+          <div class="stat-lbl">đã báo</div>
+        </div>
+        <div class="stat-box">
+          <div id="unpaidCount" class="stat-num" style="color:#f87171">—</div>
+          <div class="stat-lbl">chưa trả</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tiến độ thu -->
+    <div class="card" style="padding:20px 24px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+        <span class="section-label">Tiến độ thu tiền</span>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="width:8px;height:8px;border-radius:50%;background:#22c55e"></div>
+          <span style="font-size:0.75rem;color:var(--muted)">Đã nhận</span>
+          <div style="width:8px;height:8px;border-radius:50%;background:#f59e0b;margin-left:4px"></div>
+          <span style="font-size:0.75rem;color:var(--muted)">Đã báo</span>
+        </div>
+      </div>
+      <!-- Tiền stat row -->
+      <div style="display:flex;gap:12px;margin-bottom:16px">
+        <div style="flex:1;background:rgba(34,197,94,0.07);border:1px solid rgba(34,197,94,0.15);border-radius:10px;padding:12px 16px">
+          <div style="font-size:0.7rem;color:#4ade80;font-weight:600;margin-bottom:4px">ĐÃ NHẬN (XÁC NHẬN)</div>
+          <div id="collected" style="font-size:1.25rem;font-weight:800;color:#4ade80"></div>
+        </div>
+        <div style="flex:1;background:rgba(239,68,68,0.07);border:1px solid rgba(239,68,68,0.15);border-radius:10px;padding:12px 16px">
+          <div style="font-size:0.7rem;color:#f87171;font-weight:600;margin-bottom:4px">CÒN THIẾU</div>
+          <div id="remaining" style="font-size:1.25rem;font-weight:800;color:#f87171"></div>
+        </div>
+        <div style="flex:1;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:10px;padding:12px 16px">
+          <div style="font-size:0.7rem;color:var(--muted);font-weight:600;margin-bottom:4px">TỔNG CẦN THU</div>
+          <div id="total" style="font-size:1.25rem;font-weight:800;color:var(--text)"></div>
+        </div>
+      </div>
+      <!-- Progress bars stacked -->
+      <div style="margin-bottom:8px">
+        <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+          <span id="progressText" style="font-size:0.8rem;color:var(--muted)"></span>
+          <span id="pctText" style="font-size:0.8rem;font-weight:700;color:#818cf8"></span>
+        </div>
+        <div class="progress-track">
+          <div id="progressBar" class="progress-fill-confirmed" style="width:0%"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Nhắc nợ -->
+    <button id="btnRemind" class="btn-remind" style="align-self:flex-start">
+      <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg>
+      Copy text nhắc nợ
+    </button>
+
+    <!-- Danh sách thành viên -->
+    <div class="card" style="overflow:hidden">
+      <div style="padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">
+        <span class="section-label">Danh sách thành viên</span>
+        <span id="memberCount" style="font-size:0.75rem;color:var(--muted)"></span>
+      </div>
+      <div id="memberList"></div>
+    </div>
+  </div>
+
+  <div id="error" class="hidden" style="text-align:center;padding:80px 16px">
+    <div style="width:64px;height:64px;border-radius:16px;background:var(--surface-2);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:2rem">😕</div>
+    <p id="errorMsg" style="color:var(--muted);font-size:0.875rem"></p>
+  </div>
+
+  <div id="toast"></div>
+
+  <script src="js/config.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/manage.js"></script>
+  <script>
+    // Override render functions to use new UI
+    const _origRender = window.render;
+    window.render = function() {
+      document.getElementById("loading").classList.add("hidden");
+      document.getElementById("content").style.display = "flex";
+      document.getElementById("content").classList.remove("hidden");
+
+      document.getElementById("eventTitle").textContent = SESSION.event_name || "Thu tiền nhóm";
+      document.getElementById("eventDate").textContent = SESSION.date ? "Ngày: " + SESSION.date : "";
+
+      const per = Number(SESSION.amount_per_person) || 0;
+      const confirmedList = MEMBERS.filter(m => m.status === STATUS.CONFIRMED);
+      const reportedList  = MEMBERS.filter(m => m.status === STATUS.REPORTED);
+      const unpaidList    = MEMBERS.filter(m => m.status === STATUS.UNPAID);
+      const collected = per * confirmedList.length;
+      const grandTotal = per * MEMBERS.length;
+      const pct = grandTotal > 0 ? Math.round((collected / grandTotal) * 100) : 0;
+
+      document.getElementById("confirmedCount").textContent = confirmedList.length;
+      document.getElementById("reportedCount").textContent  = reportedList.length;
+      document.getElementById("unpaidCount").textContent    = unpaidList.length;
+      document.getElementById("collected").textContent = formatMoney(collected);
+      document.getElementById("remaining").textContent = unpaidList.length > 0 ? formatMoney(grandTotal - collected) : "Đủ rồi 🎉";
+      document.getElementById("total").textContent = formatMoney(grandTotal);
+      document.getElementById("progressBar").style.width = pct + "%";
+      document.getElementById("progressText").textContent = confirmedList.length + "/" + MEMBERS.length + " người đã xác nhận";
+      document.getElementById("pctText").textContent = pct + "%";
+      document.getElementById("memberCount").textContent = MEMBERS.length + " người";
+
+      const btnRemind = document.getElementById("btnRemind");
+      btnRemind.disabled = unpaidList.length === 0;
+      if (unpaidList.length === 0) {
+        btnRemind.innerHTML = `<span>✅</span> Đã thu đủ`;
+      } else {
+        btnRemind.innerHTML = `<svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg> Copy text nhắc nợ`;
+      }
+
+      renderMembers();
+    };
+
+    window.renderMembers = function() {
+      const order = { unpaid: 0, reported: 1, confirmed: 2 };
+      const sorted = [...MEMBERS].sort((a, b) => (order[a.status] ?? 0) - (order[b.status] ?? 0));
+      const badgeClass = { unpaid: "badge-unpaid", reported: "badge-reported", confirmed: "badge-confirmed" };
+      const dotClass   = { unpaid: "dot-unpaid",   reported: "dot-reported",   confirmed: "dot-confirmed" };
+      const labels     = { unpaid: "Chưa trả", reported: "Đã báo", confirmed: "Đã nhận" };
+
+      document.getElementById("memberList").innerHTML = sorted.map(m => {
+        const bc = badgeClass[m.status] || "badge-unpaid";
+        const dc = dotClass[m.status]   || "dot-unpaid";
+        const lbl = labels[m.status]    || "Chưa trả";
+        let btn = "";
+        if (m.status === STATUS.CONFIRMED) {
+          btn = `<button data-id="${esc(m.member_id)}" data-act="unconfirm" class="btn-unconfirm act">Hủy xác nhận</button>`;
+        } else {
+          btn = `<button data-id="${esc(m.member_id)}" data-act="confirm" class="btn-confirm act">Xác nhận nhận tiền ✓</button>`;
+        }
+        return `<div class="member-row">
+          <div style="min-width:0;flex:1">
+            <p style="font-weight:600;font-size:0.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(m.name)}${m.phone ? ` <span style="font-size:0.75rem;color:var(--muted);font-weight:400">${esc(m.phone)}</span>` : ""}</p>
+            <span class="badge ${bc}"><span class="dot ${dc}"></span>${lbl} · ${formatMoney(m.amount)}</span>
+          </div>
+          ${btn}
+        </div>`;
+      }).join("");
+
+      document.getElementById("memberList").querySelectorAll(".act").forEach(b => {
+        b.onclick = () => onAction(b.dataset.id, b.dataset.act);
+      });
+    };
+
+    window.setLive = function(ok) {
+      const dot = document.querySelector("#liveDot span");
+      if (dot) { dot.style.background = ok ? "#22c55e" : "#ef4444"; }
+      document.querySelector("#liveDot").style.color = ok ? "#4ade80" : "#f87171";
+    };
+
+    window.showError = function(msg) {
+      document.getElementById("loading").classList.add("hidden");
+      document.getElementById("content").classList.add("hidden");
+      document.getElementById("error").classList.remove("hidden");
+      document.getElementById("errorMsg").textContent = msg;
+    };
+
+    // Theme toggle
+    document.getElementById("btnTheme").onclick = () => {
+      const t = toggleTheme();
+      document.getElementById("btnTheme").textContent = t === "dark" ? "☀️" : "🌙";
+    };
+    document.getElementById("btnTheme").textContent = (lsGet(LS_KEYS.THEME, "dark") === "dark") ? "☀️" : "🌙";
+    applyTheme(lsGet(LS_KEYS.THEME, "dark"));
+  </script>
+</body>
+</html>
